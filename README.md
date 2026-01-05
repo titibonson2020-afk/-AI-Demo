@@ -17,7 +17,7 @@
 
 ### 1. 安装依赖
 
-`ash
+`bash
 pip install -r requirements.txt
 `
 
@@ -26,12 +26,12 @@ pip install -r requirements.txt
 有两种方式可以启动演示：
 
 **方式一：使用批处理文件（Windows）**
-`ash
+`bash
 start_tire_demo.bat
 `
 
 **方式二：使用命令行**
-`ash
+`bash
 streamlit run tire_demo_simple.py --server.port 8503 --server.headless true --browser.gatherUsageStats false
 `
 
@@ -39,7 +39,7 @@ streamlit run tire_demo_simple.py --server.port 8503 --server.headless true --br
 
 ### 3. 运行视频语音转文字工具
 
-直接在浏览器中打开 ideo_simple.html 文件，无需额外安装。
+直接在浏览器中打开 video_simple.html 文件，无需额外安装。
 
 ## 工具功能
 
@@ -79,3 +79,4 @@ streamlit run tire_demo_simple.py --server.port 8503 --server.headless true --br
 ## 许可证
 
 本项目仅供学习和演示使用。
+
