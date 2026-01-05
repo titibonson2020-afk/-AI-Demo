@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频语音转文字工具 - Whisper增强版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .output-area {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 150px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .engine-selector {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        
+        .engine-selector select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>视频语音转文字工具 - Whisper增强版</h1>
+            <p>支持多种语音识别引擎，包括OpenAI Whisper</p>
+        </div>
+        
+        <div class="engine-selector">
+            <label for="recognition-engine"><strong>语音识别引擎：</strong></label>
+            <select id="recognition-engine">
+                <option value="whisper">OpenAI Whisper (推荐)</option>
+                <option value="webkit">浏览器原生语音识别</option>
+                <option value="hybrid">混合模式 (先Whisper后WebKit)</option>
+            </select>
+            <small style="color: #666; display: block; margin-top: 5px;">
+                Whisper引擎更准确，但需要网络连接；WebKit引擎离线可用但准确度较低
+            </small>
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="section">
+            <h2 class="section-title">视频文件上传</h2>
+            <input type="file" id="video-file" accept="video/*">
+            <button class="btn btn-primary" onclick="processVideoFile()">处理视频文件</button>
+            <div id="video-info" style="margin-top: 10px; font-size: 14px; color: #666;"></div>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title">音频文件上传</h2>
+            <input type="file" id="audio-file" accept="audio/*">
+            <button class="btn btn-primary" onclick="processAudioFile()">处理音频文件</button>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title">增强版实时录音</h2>
+            <div style="margin-bottom: 15px;">
+                <label for="recording-mode"><strong>录音模式：</strong></label>
+                <select id="recording-mode" style="padding: 5px; margin-left: 10px;">
+                    <option value="continuous">连续录音模式</option>
+                    <option value="segmented">分段录音模式 (推荐)</option>
+                </select>
+            </div>
+            <button class="btn btn-success" id="start-record" onclick="startRecording()">开始录音</button>
+            <button class="btn btn-danger" id="stop-record" onclick="stopRecording()" disabled>停止录音</button>
+            <div id="recording-status" style="margin-top: 10px;"></div>
+            <div id="recording-progress" style="margin-top: 10px;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div id="progress-text" style="font-size: 12px; color: #666;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title">文本输入</h2>
+            <textarea id="text-input" class="input-field" rows="5" placeholder="请输入或粘贴文本"></textarea>
+            <button class="btn btn-primary" onclick="processText()">处理文本</button>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title">处理结果</h2>
+            <div id="output" class="output-area">等待处理结果...</div>
+            <button class="btn btn-primary" onclick="copyResult()">复制结果</button>
+            <button class="btn btn-danger" onclick="clearResult()">清除结果</button>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/openai-whisper@20231117/dist/whisper.js"></script>
+    <script>
+        let recognition = null;
+        let mediaRecorder = null;
+        let isRecording = false;
+        let audioChunks = [];
+        let stream = null;
+        let whisperWorker = null;
+        let audioContext = null;
+        let isProcessing = false;
+        let recordingMode = 'segmented';
+        let recordingTimer = null;
+        let segmentDuration = 30000; // 30秒分段
+        
+        // 初始化Whisper
+        async function initWhisper() {
+            try {
+                whisperWorker = new WhisperWorker({
+                    model: 'base',
+                    onProgress: (progress) => {
+                        updateProgress(progress);
+                    }
+                });
+                
+                await whisperWorker.load();
+                showStatus('Whisper模型加载完成', 'success');
+                return true;
+            } catch (error) {
+                console.error('Whisper初始化失败:', error);
+                showStatus('Whisper初始化失败，将使用备用引擎', 'error');
+                return false;
+            }
+        }
+        
+        // 初始化语音识别
+        function initSpeechRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showStatus('浏览器不支持语音识别功能', 'error');
+                return false;
+            }
+            
+            // 避免重复初始化
+            if (recognition) {
+                return true;
+            }
+            
+            try {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                
+                recognition.lang = 'zh-CN';
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.maxAlternatives = 1;
+                
+                recognition.onresult = function(event) {
+                    let finalTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        }
+                    }
+                    
+                    if (finalTranscript) {
+                        const output = document.getElementById('output');
+                        output.textContent += finalTranscript + '\n';
+                        showStatus('识别到语音内容', 'success');
+                    }
+                };
+                
+                recognition.onstart = function() {
+                    showStatus('语音识别已开始', 'success');
+                };
+                
+                recognition.onend = function() {
+                    showStatus('语音识别已结束', 'info');
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('语音识别错误:', event.error);
+                    
+                    let errorMessage = '语音识别错误';
+                    switch (event.error) {
+                        case 'no-speech':
+                            errorMessage = '未检测到语音，请确保麦克风正常工作';
+                            break;
+                        case 'audio-capture':
+                            errorMessage = '音频捕获失败，请检查麦克风权限';
+                            break;
+                        case 'not-allowed':
+                            errorMessage = '麦克风权限被拒绝，请在浏览器设置中允许麦克风访问';
+                            break;
+                        case 'network':
+                            errorMessage = '网络错误，请检查网络连接';
+                            break;
+                        case 'service-not-allowed':
+                            errorMessage = '语音识别服务不可用';
+                            break;
+                        default:
+                            errorMessage = '语音识别错误: ' + event.error;
+                    }
+                    
+                    showStatus(errorMessage, 'error');
+                };
+                
+                return true;
+            } catch (error) {
+                console.error('语音识别初始化失败:', error);
+                showStatus('语音识别初始化失败', 'error');
+                return false;
+            }
+        }
+        
+        // 显示状态消息
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status status-' + type;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
+        
+        // 显示录音状态
+        function showRecordingStatus(message, type) {
+            let statusElement = document.getElementById('recording-status');
+            
+            if (!statusElement) {
+                // 如果没有录音状态元素，创建一个
+                statusElement = document.createElement('div');
+                statusElement.id = 'recording-status';
+                statusElement.className = 'status';
+                
+                // 找到录音相关的section，在其中插入状态元素
+                const recordSection = document.querySelector('.section:nth-child(4)');
+                if (recordSection) {
+                    recordSection.appendChild(statusElement);
+                }
+            }
+            
+            statusElement.textContent = message;
+            statusElement.className = 'status status-' + type;
+            statusElement.style.display = 'block';
+            
+            if (type !== 'recording') {
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // 处理视频文件
+        function processVideoFile() {
+            const fileInput = document.getElementById('video-file');
+            if (!fileInput.files.length) {
+                showStatus('请选择视频文件', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const videoUrl = URL.createObjectURL(file);
+            
+            // 显示文件信息
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            const videoInfo = document.getElementById('video-info');
+            videoInfo.innerHTML = `
+                <strong>文件名:</strong> ${file.name}<br>
+                <strong>文件大小:</strong> ${fileSizeMB} MB<br>
+                <strong>文件类型:</strong> ${file.type}
+            `;
+            
+            showStatus('正在处理视频文件...', 'info');
+            
+            // 创建video元素来加载文件
+            const video = document.createElement('video');
+            video.src = videoUrl;
+            video.crossOrigin = 'anonymous';
+            video.style.display = 'none'; // 初始隐藏
+            
+            video.addEventListener('loadedmetadata', () => {
+                const duration = video.duration;
+                const minutes = Math.floor(duration / 60);
+                const seconds = Math.floor(duration % 60);
+                
+                videoInfo.innerHTML += `<br><strong>视频时长:</strong> ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                showStatus('视频文件加载完成！', 'success');
+                
+                // 显示使用说明
+                showStatus('使用方法：1. 点击视频播放 2. 点击"开始录音"按钮录制音频 3. 等待语音识别完成', 'info');
+                
+                // 显示视频播放器
+                displayVideoPlayer(video);
+            });
+            
+            video.addEventListener('error', (event) => {
+                console.error('视频加载错误:', event);
+                showStatus('视频文件加载失败', 'error');
+            });
+            
+            // 开始加载视频
+            video.load();
+        }
+        
+        // 显示视频播放器
+        function displayVideoPlayer(video) {
+            // 清除之前的内容
+            const existingPlayer = document.getElementById('video-player-container');
+            if (existingPlayer) {
+                existingPlayer.remove();
+            }
+            
+            // 创建视频容器
+            const videoContainer = document.createElement('div');
+            videoContainer.id = 'video-player-container';
+            videoContainer.style.margin = '20px 0';
+            videoContainer.style.padding = '15px';
+            videoContainer.style.border = '1px solid #ddd';
+            videoContainer.style.borderRadius = '8px';
+            videoContainer.style.backgroundColor = '#f9f9f9';
+            
+            // 配置视频元素
+            video.style.display = 'block';
+            video.controls = true;
+            video.style.width = '100%';
+            video.style.maxWidth = '600px';
+            video.style.marginBottom = '10px';
+            
+            // 添加使用说明
+            const instruction = document.createElement('div');
+            instruction.innerHTML = `
+                <h4>使用步骤：</h4>
+                <ol>
+                    <li>播放视频（点击播放按钮）</li>
+                    <li>点击下方"开始录音"按钮</li>
+                    <li>系统将通过麦克风录制视频声音并进行语音识别</li>
+                    <li>识别结果将显示在"处理结果"区域</li>
+                </ol>
+                <p style="color: #666; font-size: 14px;">
+                    <strong>注意：</strong>请确保麦克风权限已开启，并尽量在安静环境中使用。
+                </p>
+            `;
+            
+            videoContainer.appendChild(video);
+            videoContainer.appendChild(instruction);
+            
+            // 添加到页面
+            const videoSection = document.querySelector('.section');
+            videoSection.appendChild(videoContainer);
+        }
+        
+        // 备用音频提取函数（保留但不再使用）
+        function extractAudioFromVideo(video, file) {
+            console.log('此函数已废弃，视频处理现在使用displayVideoPlayer函数');
+        }
+        
+        // 处理音频文件
+        function processAudioFile() {
+            const fileInput = document.getElementById('audio-file');
+            if (!fileInput.files.length) {
+                showStatus('请选择音频文件', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            showStatus('正在处理音频文件...', 'info');
+            
+            if (initSpeechRecognition()) {
+                recognition.start();
+                showStatus('已启动语音识别', 'success');
+            }
+        }
+        
+        // 开始录音
+        async function startRecording() {
+            try {
+                // 获取选择的录音模式
+                recordingMode = document.getElementById('recording-mode').value;
+                
+                showStatus('正在获取麦克风权限...', 'info');
+                
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 16000 // Whisper推荐采样率
+                    } 
+                });
+                
+                showStatus('麦克风权限获取成功', 'success');
+                
+                // 初始化媒体录制器
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus'
+                });
+                
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = function(event) {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = function() {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    if (recordingMode === 'segmented') {
+                        processAudioWithWhisper(audioBlob);
+                    } else {
+                        processAudio(audioBlob);
+                    }
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                
+                // 更新UI
+                document.getElementById('start-record').disabled = true;
+                document.getElementById('stop-record').disabled = false;
+                showRecordingStatus('录音中...', 'recording');
+                
+                // 启动语音识别
+                if (recordingMode === 'continuous') {
+                    if (initSpeechRecognition()) {
+                        recognition.start();
+                    }
+                } else {
+                    // 分段模式：初始化Whisper
+                    showStatus('正在初始化Whisper引擎...', 'info');
+                    await initWhisper();
+                }
+                
+                // 如果是分段模式，启动定时器
+                if (recordingMode === 'segmented') {
+                    startRecordingTimer();
+                }
+                
+            } catch (error) {
+                console.error('录音失败:', error);
+                showStatus('录音失败: ' + error.message, 'error');
+                showRecordingStatus('录音失败', 'error');
+            }
+        }
+        
+        // 停止录音
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                isRecording = false;
+                
+                // 清除定时器
+                if (recordingTimer) {
+                    clearInterval(recordingTimer);
+                    recordingTimer = null;
+                }
+                
+                // 重置进度条
+                updateProgress(0);
+                
+                document.getElementById('start-record').disabled = false;
+                document.getElementById('stop-record').disabled = true;
+                
+                showStatus('录音已停止', 'success');
+                showRecordingStatus('录音已停止', 'info');
+                
+                // 清理资源
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+            }
+        }
+        
+        // 更新进度条
+        function updateProgress(percentage, message) {
+            const progressFill = document.querySelector('.progress-fill');
+            const progressText = document.getElementById('progress-text');
+            
+            if (progressFill) {
+                progressFill.style.width = Math.max(0, Math.min(100, percentage)) + '%';
+                progressFill.parentElement.style.display = 'block'; // 确保进度条可见
+            }
+            
+            if (progressText) {
+                progressText.textContent = message || `${Math.round(percentage)}%`;
+            }
+        }
+        
+        // 隐藏进度条
+        function hideProgress() {
+            const progressFill = document.querySelector('.progress-fill');
+            const progressText = document.getElementById('progress-text');
+            
+            if (progressFill) {
+                progressFill.parentElement.style.display = 'none';
+            }
+            
+            if (progressText) {
+                progressText.textContent = '';
+            }
+        }
+        
+        // 启动录音定时器（分段模式）
+        function startRecordingTimer() {
+            let elapsed = 0;
+            recordingTimer = setInterval(() => {
+                elapsed += 1000;
+                const progress = (elapsed / segmentDuration) * 100;
+                updateProgress(progress);
+                
+                // 显示剩余时间
+                const remaining = Math.max(0, (segmentDuration - elapsed) / 1000);
+                showRecordingStatus(`录音中... 剩余 ${Math.ceil(remaining)} 秒`, 'recording');
+                
+                // 到达分段时长时自动停止
+                if (elapsed >= segmentDuration) {
+                    showStatus('30秒分段完成，自动停止录音', 'info');
+                    stopRecording();
+                }
+            }, 1000);
+        }
+        
+        // 使用Whisper处理音频
+        async function processAudioWithWhisper(audioBlob) {
+            if (!whisperWorker) {
+                showStatus('Whisper引擎未初始化，使用备用引擎', 'error');
+                processAudio(audioBlob);
+                return;
+            }
+            
+            try {
+                updateProgress(75, '正在进行语音识别...');
+                showStatus('正在使用Whisper引擎处理音频...', 'info');
+                
+                // 转换为Whisper需要的格式
+                const arrayBuffer = await audioBlob.arrayBuffer();
+                const audioData = new Float32Array(arrayBuffer);
+                
+                updateProgress(85, 'AI语音识别中...');
+                
+                // 调用Whisper进行语音识别
+                const result = await whisperWorker.transcribe(audioData, {
+                    language: 'zh'
+                });
+                
+                updateProgress(95, '处理识别结果...');
+                
+                // 处理结果
+                if (result && result.text) {
+                    appendToOutput(result.text);
+                    showStatus('语音识别完成！', 'success');
+                } else {
+                    throw new Error('识别结果为空');
+                }
+                
+                updateProgress(100, '处理完成');
+                
+                // 延迟隐藏进度条
+                setTimeout(() => {
+                    hideProgress();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Whisper处理失败:', error);
+                showStatus('Whisper识别失败，使用备用引擎', 'warning');
+                hideProgress();
+                
+                // 降级到Web Speech API
+                processAudio(audioBlob);
+            }
+        }
+        
+        // 追加文本到输出区域
+        function appendToOutput(text) {
+            const output = document.getElementById('output');
+            if (output.textContent === '等待处理结果...') {
+                output.textContent = text;
+            } else {
+                output.textContent += '\n' + text;
+            }
+        }
+        
+        // 基础音频处理（使用Web Speech API）
+        function processAudio(audioBlob) {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showStatus('浏览器不支持语音识别', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('正在使用浏览器语音识别...', 'info');
+                
+                // 创建音频URL
+                const audioUrl = URL.createObjectURL(audioBlob);
+                
+                // 创建音频元素
+                const audio = new Audio(audioUrl);
+                
+                audio.onloadeddata = function() {
+                    showStatus('音频加载完成，准备识别...', 'info');
+                    
+                    // 尝试使用Web Speech API
+                    if (initSpeechRecognition()) {
+                        try {
+                            recognition.start();
+                            showStatus('开始语音识别...', 'info');
+                        } catch (error) {
+                            console.error('语音识别启动失败:', error);
+                            showStatus('语音识别启动失败: ' + error.message, 'error');
+                        }
+                    }
+                };
+                
+                audio.onerror = function(error) {
+                    console.error('音频播放失败:', error);
+                    showStatus('音频处理失败', 'error');
+                };
+                
+                // 开始播放音频
+                audio.play();
+                
+            } catch (error) {
+                console.error('音频处理失败:', error);
+                showStatus('音频处理失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 处理视频文件
+        function processVideoFile() {
+            const fileInput = document.getElementById('video-file');
+            if (!fileInput.files.length) {
+                showStatus('请选择视频文件', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const video = document.createElement('video');
+            const url = URL.createObjectURL(file);
+            
+            // 初始化进度条
+            updateProgress(5, '正在加载视频文件...');
+            showStatus('开始处理视频文件...', 'info');
+            
+            video.src = url;
+            
+            video.onloadedmetadata = function() {
+                const duration = video.duration;
+                const size = (file.size / (1024 * 1024)).toFixed(2);
+                
+                document.getElementById('video-info').innerHTML = 
+                    `视频信息: 时长 ${Math.floor(duration / 60)}分${Math.floor(duration % 60)}秒, 文件大小 ${size}MB`;
+                
+                showStatus('视频文件加载成功', 'success');
+                updateProgress(10, '视频文件加载完成');
+                
+                // 提取音频
+                extractAudioFromVideo(video);
+            };
+            
+            video.onloadeddata = function() {
+                updateProgress(15, '视频数据加载完成');
+            };
+            
+            video.onerror = function() {
+                showStatus('视频文件格式不支持', 'error');
+                hideProgress();
+            };
+        }
+        
+        // 从视频提取音频（静默处理）
+        function extractAudioFromVideo(video) {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            try {
+                showStatus('正在后台处理视频...', 'info');
+                updateProgress(10);
+                
+                // 创建源节点
+                const source = audioContext.createMediaElementSource(video);
+                
+                // 创建MediaStreamDestination用于录制
+                const mediaStreamDestination = audioContext.createMediaStreamDestination();
+                
+                // 创建分析器（可选）
+                const analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                
+                // 连接节点：源 -> 分析器 -> 录制流（不输出到扬声器）
+                source.connect(analyser);
+                analyser.connect(mediaStreamDestination);
+                
+                // 记录音频
+                const mediaRecorder = new MediaRecorder(mediaStreamDestination.stream);
+                const audioChunks = [];
+                
+                mediaRecorder.ondataavailable = function(event) {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = function() {
+                    updateProgress(70);
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    showStatus('音频提取完成，正在进行语音识别...', 'success');
+                    processAudioWithWhisper(audioBlob);
+                };
+                
+                mediaRecorder.onerror = function(event) {
+                    console.error('录制出错:', event.error);
+                    showStatus('音频录制出错: ' + event.error.message, 'error');
+                    updateProgress(0);
+                };
+                
+                // 开始录制
+                mediaRecorder.start();
+                updateProgress(20);
+                showStatus('后台音频录制中...', 'info');
+                
+                // 静音播放视频（不输出声音）
+                video.muted = true;
+                video.volume = 0;
+                
+                // 播放视频
+                video.play().then(() => {
+                    updateProgress(30);
+                    showStatus('视频播放中，后台音频提取进行中...', 'info');
+                }).catch(error => {
+                    console.error('视频播放失败:', error);
+                    showStatus('视频播放失败: ' + error.message, 'error');
+                    updateProgress(0);
+                });
+                
+                // 视频结束时停止录制
+                video.onended = function() {
+                    updateProgress(60);
+                    showStatus('视频处理完成，停止录制', 'info');
+                    mediaRecorder.stop();
+                    
+                    // 清理资源
+                    source.disconnect();
+                    analyser.disconnect();
+                    mediaStreamDestination.disconnect();
+                };
+                
+                video.onerror = function() {
+                    showStatus('视频播放出错', 'error');
+                    updateProgress(0);
+                    mediaRecorder.stop();
+                };
+                
+            } catch (error) {
+                console.error('音频提取失败:', error);
+                showStatus('音频提取失败: ' + error.message, 'error');
+                updateProgress(0);
+            }
+        }
+        
+        // 处理音频文件
+        function processAudioFile() {
+            const fileInput = document.getElementById('audio-file');
+            if (!fileInput.files.length) {
+                showStatus('请选择音频文件', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const audio = new Audio();
+            const url = URL.createObjectURL(file);
+            
+            audio.src = url;
+            
+            audio.onloadeddata = function() {
+                showStatus('音频文件加载成功', 'success');
+                
+                // 直接处理音频
+                const audioBlob = file;
+                processAudioWithWhisper(audioBlob);
+            };
+            
+            audio.onerror = function() {
+                showStatus('音频文件格式不支持', 'error');
+            };
+        }
+        
+        // 处理文本
+        function processText() {
+            const text = document.getElementById('text-input').value.trim();
+            if (!text) {
+                showStatus('请输入文本内容', 'error');
+                return;
+            }
+            
+            document.getElementById('output').textContent = text;
+            showStatus('文本处理完成', 'success');
+        }
+        
+        // 复制结果
+        function copyResult() {
+            const output = document.getElementById('output').textContent;
+            if (!output || output === '等待处理结果...') {
+                showStatus('没有可复制的内容', 'error');
+                return;
+            }
+            
+            navigator.clipboard.writeText(output)
+                .then(() => {
+                    showStatus('结果已复制到剪贴板', 'success');
+                })
+                .catch(error => {
+                    showStatus('复制失败: ' + error.message, 'error');
+                });
+        }
+        
+        // 清除结果
+        function clearResult() {
+            document.getElementById('output').textContent = '等待处理结果...';
+            showStatus('结果已清除', 'info');
+        }
+        
+        // 页面加载时初始化
+        window.onload = function() {
+            console.log('简化版页面加载完成');
+            
+            const hasSpeechRecognition = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+            const hasMediaRecorder = 'MediaRecorder' in window;
+            
+            if (!hasSpeechRecognition) {
+                showStatus('浏览器不支持语音识别功能', 'error');
+            }
+            
+            if (!hasMediaRecorder) {
+                showStatus('浏览器不支持录音功能', 'error');
+            }
+            
+            if (hasSpeechRecognition && hasMediaRecorder) {
+                showStatus('页面加载完成，所有功能正常', 'success');
+            }
+        };
+    </script>
+</body>
+</html>

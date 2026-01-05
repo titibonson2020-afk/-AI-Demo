@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI工具集合</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .tool-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+        
+        .tool-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .tool-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .tool-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .tool-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        
+        .tool-features li {
+            color: #555;
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .tool-features li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+        
+        .launch-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .launch-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+        
+        .status-dot.offline {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI工具集合</h1>
+            <p>专业的AI驱动工具集，助力您的数字化转型</p>
+        </div>
+        
+        <div class="tools-grid">
+            <!-- 视频转文字工具 -->
+            <div class="tool-card" onclick="window.open('video_simple.html', '_blank')">
+                <div class="tool-icon">🎬</div>
+                <div class="tool-title">视频转文字工具</div>
+                <div class="tool-description">
+                    基于AI的视频内容语音识别与文字提取工具，支持多种视频格式，静默处理无干扰
+                </div>
+                <ul class="tool-features">
+                    <li>静默视频处理，无音频输出</li>
+                    <li>实时进度条显示</li>
+                    <li>Whisper.js高精度识别</li>
+                    <li>支持多种视频格式</li>
+                    <li>自动文字输出</li>
+                </ul>
+                <div class="status">
+                    <div class="status-item">
+                        <div class="status-dot"></div>
+                        <span>服务正常</span>
+                    </div>
+                    <div class="status-item">
+                        <span>端口: 8080</span>
+                    </div>
+                </div>
+                <br>
+                <a href="video_simple.html" class="launch-btn" target="_blank">🚀 启动工具</a>
+            </div>
+            
+            <!-- 轮胎制造业AI工具 -->
+            <div class="tool-card" onclick="openStreamlit()">
+                <div class="tool-icon">🏭</div>
+                <div class="tool-title">轮胎制造业技术写作AI</div>
+                <div class="tool-description">
+                    基于ChatGLM3-6B的专业技术文档优化工具，专门针对轮胎制造业场景设计
+                </div>
+                <ul class="tool-features">
+                    <li>6大功能模块完整覆盖</li>
+                    <li>内置3个行业案例数据</li>
+                    <li>LoRA微调参数可调</li>
+                    <li>自动+人工评估体系</li>
+                    <li>API部署演示</li>
+                </ul>
+                <div class="status">
+                    <div class="status-item">
+                        <div class="status-dot offline" id="streamlit-status"></div>
+                        <span id="streamlit-text">启动中...</span>
+                    </div>
+                    <div class="status-item">
+                        <span>端口: 8501</span>
+                    </div>
+                </div>
+                <br>
+                <button class="launch-btn" onclick="openStreamlit()">🏭 启动Demo</button>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px; color: #666;">
+            <p>💡 提示：点击工具卡片或按钮即可启动相应功能</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">
+                如需启动Streamlit服务，请确保已安装相关依赖包
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // 检查Streamlit服务状态
+        function checkStreamlitStatus() {
+            fetch('http://localhost:8501', {mode: 'no-cors'})
+                .then(() => {
+                    document.getElementById('streamlit-status').classList.remove('offline');
+                    document.getElementById('streamlit-status').classList.add('online');
+                    document.getElementById('streamlit-text').textContent = '服务正常';
+                })
+                .catch(() => {
+                    document.getElementById('streamlit-status').classList.add('offline');
+                    document.getElementById('streamlit-text').textContent = '服务离线';
+                });
+        }
+        
+        // 打开Streamlit应用
+        function openStreamlit() {
+            const status = document.getElementById('streamlit-text').textContent;
+            if (status === '服务正常') {
+                window.open('http://localhost:8501', '_blank');
+            } else {
+                alert('Streamlit服务未启动，请先启动服务。\n\n启动命令：\npython -m streamlit run tire_tech_writing_demo.py --server.port 8501');
+            }
+        }
+        
+        // 页面加载时检查服务状态
+        window.onload = function() {
+            checkStreamlitStatus();
+            // 每30秒检查一次状态
+            setInterval(checkStreamlitStatus, 30000);
+        };
+    </script>
+</body>
+</html>
